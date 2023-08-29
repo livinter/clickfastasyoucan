@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click the Star</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <h1>click as fast as you can all points on the star</h1>
+    <svg id="starSvg" width="500" height="500"></svg>
+    <div id="barChart"></div>
+    <div id="medianDisplay"></div>
+    <div id="completionMessage" style="display: none;">
+        <p>done. good job!</p>
+        <button onclick="restart()">restart</button>
+        <label for="labelInput">label:</label>
+        <input type="text" id="labelInput">
+        <button onclick="saveData()">save</button>
+    </div>
+    <div id="savedEntries"></div>
+
+    <script>
+        const svg = document.getElementById('starSvg');
+        const outerRadius = 220;
+        const innerRadius = outerRadius / 2;
+        const points = 20;
+        const circleRadius = 15;
+        const clickSound = new Audio('https://creatorassets.com/cdn/10-click-sound-effects/click-2.mp3');
+        let timestamps = [];
+
+        function drawStar() {
+            let pathData = [];
+
+            for (let i = 0; i < points; i++) {
+                const angle = (i * 2 * Math.PI) / points;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const x = 250 + radius * Math.sin(angle);
+                const y = 250 - radius * Math.cos(angle);
+                pathData.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
+
+
+            }
+            const star = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            star.setAttribute('d', pathData.join(' '));
+            star.setAttribute('fill', 'none');
+            star.setAttribute('stroke', 'black');
+            svg.appendChild(star);
+
+            for (let i = 0; i < points; i++) {
+                const angle = (i * 2 * Math.PI) / points;
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const x = 250 + radius * Math.sin(angle);
+                const y = 250 - radius * Math.cos(angle);
+
+                // Draw circle on each point
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', circleRadius);
+                circle.setAttribute('fill', 'yellow');
+                circle.addEventListener('click', circleClicked);
+                svg.appendChild(circle);
+            }
+            pathData.push('Z');
+        
+        }
+
+        function circleClicked(event) {
+            const circle = event.target;
+            if (circle.getAttribute('fill') === 'yellow') {
+                circle.setAttribute('fill', 'green');
+                clickSound.play();
+                timestamps.push(Date.now());
+                if (timestamps.length > 1) {
+                    updateBarChart();
+                }
+                if (timestamps.length === points) {
+                    document.getElementById('completionMessage').style.display = 'block';
+                }
+            }
+        }
+
+        function updateBarChart() {
+            const barChart = document.getElementById('barChart');
+            barChart.innerHTML = '';
+            const differences = [];
+            for (let i = 1; i < timestamps.length; i++) {
+                const diff = timestamps[i] - timestamps[i - 1];
+                differences.push(diff);
+                const bar = document.createElement('div');
+                bar.style.height = (diff / 25) + 'px';
+                bar.style.width = '20px';
+                bar.style.background = 'blue';
+                bar.style.display = 'inline-block';
+                bar.style.marginRight = '5px';
+                barChart.appendChild(bar);
+            }
+            const median = getMedian(differences);
+            document.getElementById('medianDisplay').textContent = 'Median time difference: ' + median + 'ms';
+        }
+
+        function getMedian(arr) {
+            const sorted = arr.slice().sort((a, b) => a - b);
+            const middle = Math.floor(sorted.length / 2);
+            if (sorted.length % 2 === 0) {
+                return (sorted[middle - 1] + sorted[middle]) / 2;
+            }
+            return sorted[middle];
+        }
+
+        function restart() {
+            timestamps = [];
+            document.getElementById('barChart').innerHTML = '';
+            document.getElementById('medianDisplay').textContent = '';
+            document.getElementById('completionMessage').style.display = 'none';
+            svg.innerHTML = '';
+            drawStar();
+        }
+
+        function saveData() {
+            const label = document.getElementById('labelInput').value;
+            const median = getMedian(timestamps.slice(1).map((t, i) => t - timestamps[i]));
+            const data = {
+                label,
+                median,
+                date: new Date().toISOString()
+            };
+            const saved = JSON.parse(localStorage.getItem('savedEntries') || '[]');
+            saved.push(data);
+            localStorage.setItem('savedEntries', JSON.stringify(saved));
+            displaySavedEntries();
+        }
+
+        function displaySavedEntries() {
+            const saved = JSON.parse(localStorage.getItem('savedEntries') || '[]');
+            const container = document.getElementById('savedEntries');
+            container.innerHTML = '';
+            saved.forEach(entry => {
+                const div = document.createElement('div');
+                div.textContent = `Label: ${entry.label}, Median: ${entry.median}ms, Date: ${entry.date}`;
+                container.appendChild(div);
+            });
+        }
+
+        drawStar();
+        displaySavedEntries();
+    </script>
+</body>
+</html>
