@@ -14,16 +14,16 @@
     </style>
 </head>
 <body>
-    <h1>click as fast as you can all points on the star</h1>
+    <h1>click as fast as you can on all points</h1>
     <svg id="starSvg" width="500" height="500"></svg>
     <div id="barChart"></div>
     <div id="medianDisplay"></div>
     <div id="completionMessage" style="display: none;">
         <p>done. good job!</p>
-        <button onclick="restart()">restart</button>
         <label for="labelInput">label:</label>
         <input type="text" id="labelInput">
         <button onclick="saveData()">save</button>
+        <button onclick="restart()">restart</button>        
     </div>
     <div id="savedEntries"></div>
 
@@ -97,7 +97,7 @@
                 differences.push(diff);
                 const bar = document.createElement('div');
                 bar.style.height = (diff / 25) + 'px';
-                bar.style.width = '20px';
+                bar.style.width = '15px';
                 bar.style.background = 'blue';
                 bar.style.display = 'inline-block';
                 bar.style.marginRight = '5px';
@@ -145,7 +145,7 @@
             container.innerHTML = '';
             saved.forEach(entry => {
                 const div = document.createElement('div');
-                div.textContent = `Label: ${entry.label}, Median: ${entry.median}ms, Date: ${entry.date}`;
+                div.textContent = `Date: ${entry.date}, Median: ${entry.median}ms, Label: ${entry.label}`;
                 container.appendChild(div);
             });
         }
@@ -153,7 +153,7 @@
         drawStar();
         displaySavedEntries();
     </script>
-created by ChatGPT using the following <a href="https://github.com/livinter/clickfastasyoucan/">instructions</a>.
+created with ChatGPT using the following <a href="https://github.com/livinter/clickfastasyoucan/">instructions</a>.
 
 </body>
 </html>
